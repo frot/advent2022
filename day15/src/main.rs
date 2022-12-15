@@ -46,29 +46,32 @@ fn parse(filename: &str) -> Vec<Sensor> {
     return sensors;
 }
 
-fn add_line(v: &mut Vec<Pt>, mut ln: Pt) -> Vec<Pt> {
-    let mut v_out = Vec::<Pt>::new();
-    for line in v {
-        if ln.0 <= line.1 && ln.1 >= line.0 {
-            ln.0 = min(ln.0, line.0);
-            ln.1 = max(ln.1, line.1);
+fn join_lines(v: &mut Vec<Pt>) {
+    v.sort();
+    let mut i=0;
+    let mut j=i+1;
+    while j < v.len() {
+        if v[i].0 <= v[j].1 && v[i].1 >= v[j].0 {
+            v[i].0 = min(v[i].0, v[j].0);
+            v[i].1 = max(v[i].1, v[j].1);
+            v.remove(j);
         }
         else {
-            v_out.push(*line);
+            i = j;
+            j = i+1;
         }
     }
-    v_out.push(ln);
-    return v_out;
 }
 
 fn eval_line(ss: &Vec<Sensor>, row: i32) -> Vec<Pt> {
-    let mut rlist = Vec::<Pt>::new();
+    let mut rlist = Vec::<Pt>::with_capacity(16);
     for r in ss {
         let d = r.dist - (row-r.pos.1).abs();
         if d >= 0 {
-            rlist = add_line(&mut rlist, (r.pos.0-d, r.pos.0+d));
+            rlist.push((r.pos.0-d, r.pos.0+d));
         }
     }
+    join_lines(&mut rlist);
     return rlist;
 }
 
